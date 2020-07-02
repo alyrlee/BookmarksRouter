@@ -2,9 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const { NODE_ENV } = require('./config');
+const helmet = require('helmet');
+const { NODE_ENV } = require('../src/config');
 const { v4: uuid } = require('uuid');
 const logger = require('../src/logger')
+const store = require('../src/store')
 const app = express();
 app.use(express.json());
 
@@ -12,8 +14,11 @@ const morganOption = (NODE_ENV === 'production')
   ? 'tiny'
   : 'dev';
 
-app.use(morgan(morganOption));
+  app.use(morgan((NODE_ENV === 'production') ? 'tiny' : 'common', {
+    skip: () => NODE_ENV === 'test'
+  }))
 app.use(cors());
+
 
 
 const bookmarksRouter = express.Router()
@@ -27,7 +32,7 @@ const bodyParser = express.json()
 
 
 bookmarksRouter
-.route('/bookmarks')
+.route('/bookmarks') ///use with id 
 .get((req, res) => {
   res.json(store.bookmarks)
 })    
@@ -37,38 +42,25 @@ bookmarksRouter
  if (!title) {
     logger.error(`Title is required`);
  return res
+}
 })
-})
-
-app.get('/bookmarksRouter', (req, res) => {
-    });
-
-    if (!bookmarks) {
-        logger.error(`Can't locate bookmark.`);
-        return res
-          .status(404)
-          .send('Bookmark Not Found');
-      }
-    
-      res.json(bookmarks);
-    });
 
     
-app.get('/bookmarksRouter/:id', (req, res) => {
-     });
-
+app.get('/bookmarks/:id', (req, res) => {
      const { id } = req.params;
-     const list = lists.find(li => li.id === Number(id));
+     const bookmark = store.bookmarks.find(bookmark => bookmark.id === id);
+     console.log(bookmark);
    
-     // make sure we found a list
-     if (!list) {
-       logger.error(`List with id ${id} not found.`);
+     // make sure we found a bookmark
+     if (!bookmark) {
+       logger.error(`Bookmark with id ${id} not found.`);
        return res
          .status(404)
-         .send('List Not Found');
+         .send('Bookmark Not Found');
      }
    
-     res.json(list);
+     res.json(bookmark);
+    });
 
  app.post('/bookmarksRouter', (req, res) => {
     const { title, content } = req.body;
@@ -105,41 +97,41 @@ app.get('/bookmarksRouter/:id', (req, res) => {
     });
     
       // check bookmarks IDs
-      if (bookmarksIds.length > 0) {
-        let valid = true;
-        bookmarksIds.forEach(cid => {
-          const bookmarks = bookmarks.find(c => b.id === Number(bid));
-          if (!bookmarks) {
-            logger.error(`Bookmark Card with id ${cid} not found in bookmarks array.`);
-            valid = false;
-          }
-        });
+      // if (bookmarksIds.length > 0) {
+    //     let valid = true;
+    //     bookmarksIds.forEach(cid => {
+    //       const bookmarks = bookmarks.find(c => b.id === Number(bid));
+    //       if (!bookmarks) {
+    //         logger.error(`Bookmark Card with id ${cid} not found in bookmarks array.`);
+    //         valid = false;
+    //       }
+    //     });
     
-        if (!valid) {
-          return res
-            .status(400)
-            .send('Invalid data');
-        }
-      }
+    //     if (!valid) {
+    //       return res
+    //         .status(400)
+    //         .send('Invalid data');
+    //     }
+    //   }
     
-      // get an id
-      const id = uuid();
+    //   // get an id
+    //   const id = uuid();
     
-      const list = {
-        id,
-        header,
-        bookmarksIds
-      };
+    //   const list = {
+    //     id,
+    //     header,
+    //     bookmarksIds
+    //   };
     
-      lists.push(list);
+    //   lists.push(list);
     
-      logger.info(`List with id ${id} created`);
+    //   logger.info(`List with id ${id} created`);
     
-      res
-        .status(201)
-        .location(`http://localhost:8000/list/${id}`)
-        .json({ id });
-    });
+    //   res
+    //     .status(201)
+    //     .location(`http://localhost:8000/list/${id}`)
+    //     .json({ id });
+    // });
     
     
     app.delete((req, res) => {
