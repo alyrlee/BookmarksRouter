@@ -1,19 +1,9 @@
 require('dotenv').config();
 const express = require('express');
-const morgan = require('morgan');
-const cors = require('cors');
-const { NODE_ENV } = require('./config');
 const { v4: uuid } = require('uuid');
+const { isWebUri } = require('valid-url');
 const logger = require('../src/logger')
-const app = express();
-app.use(express.json());
-
-const morganOption = (NODE_ENV === 'production')
-  ? 'tiny'
-  : 'dev';
-
-app.use(morgan(morganOption));
-app.use(cors());
+const store = require('../src/store')
 
 
 const bookmarksRouter = express.Router()
@@ -27,126 +17,74 @@ const bodyParser = express.json()
 
 
 bookmarksRouter
-.route('/bookmarks')
+.route('/bookmarks') //use with id to get bookmark route using id
 .get((req, res) => {
-  res.json(store.bookmarks)
+  res.json(store.bookmarks) //return boookmarks data based upon body parser
 })    
 
 .post(bodyParser, (req, res)=>{
-     const { title, content } = req.body
- if (!title) {
-    logger.error(`Title is required`);
- return res
+    for (const field of [ 'title', 'url', 'rating']) {
+ //make sure arguments match body title, url, rating from store required
+ if (!req.boody[field]) {
+    logger.error(`${field} is required`); //field 
+ return res.status(400).semd(`'${field}' is required`)
+}
+}
+
+const { title, url, description, rating } = req.body
+
+//rating
+if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
+  logger.error(`Invalid rating '${rating}' supplied`)
+  return res.status(400).send(`'rating' must be a number between 0 and 5`)
+}
+
+//require url syntax
+if (!isWebUri(url)) {
+  logger.error(`Invalid url '${url}' supplied`)
+  return res.status(400).send(`'url' must be a valid URL`)
+}
+
+const bookmark = { id: uuid(), title, url, description, rating }
+
+store.bookmarks.push(bookmark)
+
+logger.info(`Bookmark with id ${bookmark.id} created`)
+res
+  .status(201)
+  .location(`http://localhost:8000/bookmarks/${bookmark.id}`)
+  .json(bookmark)
 })
-})
 
-app.get('/bookmarksRouter', (req, res) => {
-    });
 
-    if (!bookmarks) {
-        logger.error(`Can't locate bookmark.`);
-        return res
-          .status(404)
-          .send('Bookmark Not Found');
-      }
-    
-      res.json(bookmarks);
-    });
-
-    
-app.get('/bookmarksRouter/:id', (req, res) => {
-     });
-
-     const { id } = req.params;
-     const list = lists.find(li => li.id === Number(id));
+bookmarksRouter
+  .route('/bookmarks/:bookmark_id')
+  .get((req, res) => {
+     const { bookmark_id } = req.params;
+     const bookmark = store.bookmarks.find(c => c.id == bookmark_id);
+     console.log(bookmark);
    
-     // make sure we found a list
-     if (!list) {
-       logger.error(`List with id ${id} not found.`);
+     // make sure we found a bookmark
+     if (!bookmark) {
+       logger.error(`Bookmark with id ${id} not found.`);
        return res
          .status(404)
-         .send('List Not Found');
+         .send('Bookmark Not Found');
      }
    
-     res.json(list);
-
- app.post('/bookmarksRouter', (req, res) => {
-    const { title, content } = req.body;
-
-    if (!title) {
-      logger.error('Title is required');
-      return res
-        .status(400)
-        .send('Invalid data');
-    } 
-    if (!content) {
-        logger.error('Content is required');
-        return res
-          .status(400)
-          .send('Invalid data');
-      }
-    
-      // get an id
-      const id = uuid();
-      const bookmarks = {
-        id,
-        title,
-        description
-      };
-    
-      bookmarks.push(bookmarks);
-    
-      logger.info(`Bookmark with id ${id} created`);
-    
-      res
-        .status(201)
-        .location(`http://localhost:8000/bokmarks/${id}`)
-        .json(bookmarks);
+     res.json(bookmark);
     });
+
+    bookmarksRouter
     
-      // check bookmarks IDs
-      if (bookmarksIds.length > 0) {
-        let valid = true;
-        bookmarksIds.forEach(cid => {
-          const bookmarks = bookmarks.find(c => b.id === Number(bid));
-          if (!bookmarks) {
-            logger.error(`Bookmark Card with id ${cid} not found in bookmarks array.`);
-            valid = false;
-          }
-        });
-    
-        if (!valid) {
-          return res
-            .status(400)
-            .send('Invalid data');
-        }
-      }
-    
-      // get an id
-      const id = uuid();
-    
-      const list = {
-        id,
-        header,
-        bookmarksIds
-      };
-    
-      lists.push(list);
-    
-      logger.info(`List with id ${id} created`);
-    
-      res
-        .status(201)
-        .location(`http://localhost:8000/list/${id}`)
-        .json({ id });
-    });
-    
-    
-    app.delete((req, res) => {
-      const { bookmarks_id } = req.params;
+    .delete((req, res) => {
+      const { bookmark_id } = req.params;
     
       const bookmarksIndex = store.bookmarks.findbookmarksIndex(b => b.id == bookmarks_id);
-    
+      
+      //remove bookmark from lists
+      //assume bookmark ids are not duplicated in the bokmard ids array
+
       if (bookmarksIndex === -1) {
         logger.error(`Bookmark with id ${bookmark_id} not found.`);
         return res
@@ -154,22 +92,19 @@ app.get('/bookmarksRouter/:id', (req, res) => {
           .send('Bookmark Not found');
       }
     
-      //remove card from lists
-      //assume cardIds are not duplicated in the cardIds array
-      lists.forEach(list => {
-        const bookmarksdIds = list.bookmarksIds.filter(bid => bid !== Number(id) );
-        list.bookmarksIds = bokmarksIds;
-      });
+    
+      // lists.forEach(list => {
+      //   const bookmarksdIds = list.bookmarksIds.filter(bid => bid !== Number(id) );
+      //   list.bookmarksIds = bokmarksIds;
+      // });
     
       store.bookmarks.splice(bookmarskIndex, 1);
     
-      logger.info(`Bookmark with id ${bookmarks_id} deleted.`);
+      logger.info(`Bookmark with id ${bookmark_id} deleted.`);
     
       res
         .status(204)
         .end();
     })
 
- module.exports = bookmarksRouter;   
-    
-    
+ module.exports = bookmarksRouter; 

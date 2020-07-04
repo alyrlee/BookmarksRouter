@@ -2,7 +2,7 @@
   "name": "express-boilerplate-project",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "mocha --require test/setup.js",
     "dev": "nodemon src/server.js",
@@ -11,7 +11,7 @@
     "deploy": "git push heroku master"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ashley Lee",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
@@ -20,6 +20,7 @@
     "helmet": "^3.23.1",
     "morgan": "^1.10.0",
     "uuid": "^8.1.0",
+    "valid-url": "^1.0.9",
     "winston": "^3.3.2"
   },
   "devDependencies": {
