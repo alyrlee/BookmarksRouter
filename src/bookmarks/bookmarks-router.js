@@ -2,8 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const { v4: uuid } = require('uuid');
 const { isWebUri } = require('valid-url');
-const logger = require('../src/logger')
+const logger = require('winston')
 const store = require('../src/store')
+
+///Users/ashleylee/Desktop/THINKFUL/Projects/bookmarks-router/src/store.js
+///Users/ashleylee/Desktop/THINKFUL/Projects/bookmarks-router/src/logger.js
 
 
 const bookmarksRouter = express.Router()
