@@ -2,8 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const { v4: uuid } = require('uuid');
 const { isWebUri } = require('valid-url');
-const logger = require('../src/logger')
-const store = require('../src/store')
+const logger = require('./logger')
+const store = require('./store')
 
 
 const bookmarksRouter = express.Router()
