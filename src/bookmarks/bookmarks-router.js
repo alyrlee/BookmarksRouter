@@ -2,21 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const { v4: uuid } = require('uuid');
 const { isWebUri } = require('valid-url');
-const logger = require('winston')
-const store = require('../src/store')
-
-///Users/ashleylee/Desktop/THINKFUL/Projects/bookmarks-router/src/store.js
-///Users/ashleylee/Desktop/THINKFUL/Projects/bookmarks-router/src/logger.js
+const logger = require('./logger')
+const store = require('./store')
 
 
 const bookmarksRouter = express.Router()
 const bodyParser = express.json()
-
-
-// Write a route handler for the endpoint GET /bookmarks that returns a list of bookmarks
-// Write a route handler for the endpoint GET /bookmarks/:id that returns a single bookmark with the given ID, return 404 Not Found if the ID is not valid
-// Write a route handler for POST /bookmarks that accepts a JSON object representing a bookmark and adds it to the list of bookmarks after validation.
-// Write a route handler for the endpoint DELETE /bookmarks/:id that deletes the bookmark with the given ID.
 
 
 bookmarksRouter
@@ -60,7 +51,9 @@ res
 })
 
 
-app.get('/bookmarks/:bookmark_id', (req, res) => {
+bookmarksRouter
+  .route('/bookmarks/:bookmark_id')
+  .get((req, res) => {
      const { bookmark_id } = req.params;
      const bookmark = store.bookmarks.find(c => c.id == bookmark_id);
      console.log(bookmark);
@@ -76,8 +69,9 @@ app.get('/bookmarks/:bookmark_id', (req, res) => {
      res.json(bookmark);
     });
 
- 
-    app.delete((req, res) => {
+    bookmarksRouter
+    
+    .delete((req, res) => {
       const { bookmark_id } = req.params;
     
       const bookmarksIndex = store.bookmarks.findbookmarksIndex(b => b.id == bookmarks_id);
@@ -107,6 +101,4 @@ app.get('/bookmarks/:bookmark_id', (req, res) => {
         .end();
     })
 
- module.exports = bookmarksRouter;   
-    
-    
+ module.exports = bookmarksRouter; 
