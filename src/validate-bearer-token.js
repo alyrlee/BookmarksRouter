@@ -1,7 +1,6 @@
 const { API_TOKEN } = require('./config')
 const logger = require('./logger')
 
-// /Users/ashleylee/Desktop/THINKFUL/Projects/bookmarks-server/src/logger.js
 
 function validateBearerToken(req, res, next) {
   const authToken = req.get('Authorization')
